@@ -86,12 +86,7 @@ This app provides a marketplace for individuals to buy and sell masks to one ano
    * Leads you to another screen to add the name, photo, and description of the mask
 
 ## Wireframes
-[Add picture of your hand sketched wireframes in this section]
-<img src="YOUR_WIREFRAME_IMAGE_URL" width=600>
-
-### [BONUS] Digital Wireframes & Mockups
-
-### [BONUS] Interactive Prototype
+[Figma Wireframe](https://www.figma.com/file/JcjFMTe55J2f2rAdjxncS6/Mask-Market?node-id=0%3A1)
 
 ## Schema 
 [This section will be completed in Unit 9]
