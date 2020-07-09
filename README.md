@@ -89,10 +89,169 @@ This app provides a marketplace for individuals to buy and sell masks to one ano
 [Figma Wireframe](https://www.figma.com/file/JcjFMTe55J2f2rAdjxncS6/Mask-Market?node-id=0%3A1)
 
 ## Schema 
-[This section will be completed in Unit 9]
+The following objects will constitue the app flow 
+* User Object
+* Mask Listing Object
+
 ### Models
-[Add table of models]
+
+#### Model: User
+
+| Property       | Type         | Description              |
+| :------------- | :----------: | -----------:             |
+| objectId       | String       | unique id for the user   |
+| username       | String       | username for the user    |
+| email          | String       | email for the user       |
+
+#### Model: Listings
+
+| Property       | Type         | Description                             |
+| :------------- | :----------: | -----------:                            |
+| objectId       | String       | unique id for the listing               |
+| createdAt      | Date         | date that the listing was created       |
+| description    | String       | description for the mask listing        |
+| title          | String       | title of the mask listing               |
+| city           | String       | city of where the mask listing is based |
+| state          | String       | state of where the mask listing is based| 
+| author         | PFUser       | user that created the listing           |
+| price          | Integer      | price of the mask listing               |
+| purchased      | Boolean      | flag whether or not it is purchased     |
+| purchasedBy    | PFUser       | user that purchased the mask listing    | 
+| image          | File         | image for the mask listing              | 
+
 ### Networking
-- [Add list of network requests by screen ]
-- [Create basic snippets for each Parse network request]
-- [OPTIONAL: List endpoints if using existing API such as Yelp]
+
+#### Neccessary Network Requests
+* Login Screen 
+    * (Read/GET) Fetch the logged in user's User object 
+* Create Account Screen 
+    * (Create/POST) Create a new user object
+* Home Screen
+    * (Read/GET) Fetch all of the current mask listings not purchased
+* Detail Screen 
+    * (Read/GET) Fetch the listing corresponding to the selected listing 
+* Confirm Purchase Screen 
+    * (Update/PUT) Update purchase to true 
+    * (Update/PUT) Update purchasedBy to be the signed in user
+* Purchases Screen
+    * (Read/GET) Fetch listings with purchasedBy set to the current author
+* Selling Screen
+    * (Read/GET) Fetch listings with author set to the current author
+* Creation Screen
+    * (Create/POST) Create a new listing object 
+        * purchased set to false and purchasedBy to nil
+
+#### Parse Network Snippets
+* Login Screen
+    ```iOS
+    [PFUser logInWithUsernameInBackground:@"myname" password:@"mypass"
+      block:^(PFUser *user, NSError *error) {
+    if (user) {
+      // Do stuff after successful login.
+    } else {
+      // The login failed. Check error to see why.
+    }
+    }];
+    ```
+* Create Account Screen
+    ```iOS
+    PFUser *const user = [PFUser user];
+    user.username = @"my name";
+    user.password = @"my pass";
+    user.email = @"email@example.com";
+
+    [user signUpInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+      if (!error) {   
+          // Open to the home screen
+      } else {   
+          NSString *errorString = [error userInfo][@"error"];  
+      }
+    }];
+    ```
+    
+* Home Screen 
+    ```iOS
+    PFQuery *const query = [PFQuery queryWithClassName:@"Listings"];
+    [query whereKey:@"purchased" isEqualTo:NO]; 
+    query.limit = 20; 
+    
+    [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
+        if (!error) {
+            NSLog(@"Successfully retrieved %d scores.", objects.count);
+            // Do something with the found objects
+        } else {
+            // Log details of the failure
+            NSLog(@"Error: %@ %@", error, [error userInfo]);
+        }
+    }];
+    ```
+    
+* Confirm Purchase Screen 
+    ```iOS
+    [query getObjectInBackgroundWithId:@"xWMyZ4YEGZ" 
+                    block:^(PFObject *listing, NSError *error) {
+          listing[@"purchased"] = @YES;
+          listing[@"purchasedBy"] = PFUser.currentUser; 
+    }]; 
+    ```
+    
+* Purchases Screen
+    ```iOS
+    PFQuery *const query = [PFQuery queryWithClassName:@"Listings"];
+    [query whereKey:@"purchased" isEqualTo:YES];
+    [query whereKey:@"purchasedBy" isEqualTo:PFUser.currentUser];
+    query.limit = 20; 
+    
+    [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
+        if (!error) {
+            NSLog(@"Successfully retrieved %d scores.", objects.count);
+            // Do something with the found objects
+        } else {
+            // Log details of the failure
+            NSLog(@"Error: %@ %@", error, [error userInfo]);
+        }
+    }];
+    ```
+    
+* Selling Screen
+     ```iOS
+     PFQuery *const query = [PFQuery queryWithClassName:@"Listings"];
+     [query whereKey:@"author" isEqualTo:PFUser.currentUser];
+     query.limit = 20; 
+    
+     [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
+        if (!error) {
+            NSLog(@"Successfully retrieved %d scores.", objects.count);
+            // Do something with the found objects
+        } else {
+            // Log details of the failure
+            NSLog(@"Error: %@ %@", error, [error userInfo]);
+        }
+      }];
+     ```
+    
+* Creation Screen 
+    ```iOS
+    PFObject *listing = [PFObject objectWithClassName:@"Listings"];
+    listing[@"description"] = self.tempDescription;
+    listing[@"title"] = self.tempTitle;
+    listing[@"city"] = self.tempCity;
+    listing[@"state"] = self.tempState; 
+    listing[@"author"] = PFUser.currentUser; 
+    listing[@"price"] = self.tempPrice; 
+    listing[@"purchased"] = @NO; 
+    listing[@"purchasedBy"] = nil; 
+    listing[@"image"] = self.tempImage; 
+    
+    [listing saveInBackgroundWithBlock:^(BOOL succeeded, NSError * _Nullable error) {
+      if (succeeded) {
+        // The object has been saved.
+      } else {
+        // There was a problem, check error.description
+      }
+    }];
+    ```
+
+### API 
+
+#### Stripe API
